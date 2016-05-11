@@ -73,7 +73,7 @@ def print_graph_script(table):
 
     # google chart snippet
     chart_code="""
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="/google-jsapi.js"></script>
     <script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
       google.setOnLoadCallback(drawChart);
@@ -252,7 +252,7 @@ def main():
     print "<body>"
     print "<h1>Raspberry Pi Temperature Logger</h1>"
     print "<hr>"
-    print_time_selector(option)
+    #print_time_selector(option)
     show_graph()
     show_stats(option)
     print "</body>"
