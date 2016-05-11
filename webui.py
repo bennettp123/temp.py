@@ -252,7 +252,7 @@ def main():
     print "<body>"
     print "<h1>Raspberry Pi Temperature Logger</h1>"
     print "<hr>"
-    print_time_selector(option)
+    #print_time_selector(option)
     show_graph()
     show_stats(option)
     print "</body>"
