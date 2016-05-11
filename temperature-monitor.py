@@ -31,7 +31,7 @@ def read_temp():
         return temp_c#, temp_f
 	
 def log_temp(temp):
-    dbname='data/temperatures.db'
+    dbname='/home/bennett/src/temp.py/data/temperatures.db'
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
 
@@ -39,17 +39,17 @@ def log_temp(temp):
     conn.commit()
     conn.close()
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     if os.access(os.path.expanduser("~/.temperature-monitor.pid"), os.F_OK):
-        pidfile = open(os.path.expanduser("~/.temperature-monitor.pid""), "r")
+        pidfile = open(os.path.expanduser("~/.temperature-monitor.pid"), "r")
         pidfile.seek(0)
         old_pd = pidfile.readline()
        	if os.path.exists("/proc/%s" % old_pd):
             sys.exit(0)
 	else:
-            os.remove(os.path.expanduser("~/.temperature-monitor.pid""))
+            os.remove(os.path.expanduser("~/.temperature-monitor.pid"))
 
-    pidfile = open(os.path.expanduser("~/.temperature-monitor.pid""), "w")
+    pidfile = open(os.path.expanduser("~/.temperature-monitor.pid"), "w")
     pidfile.write("%s" % os.getpid())
     pidfile.close
 
