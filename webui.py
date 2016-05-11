@@ -225,8 +225,8 @@ def main():
     # get options that may have been passed to this script
     option=get_option()
 
-    #if option is None:
-    #    option = str(24)
+    if option is None:
+        option = str(24*7)
 
     # get data from the database
     records=get_data(option)
