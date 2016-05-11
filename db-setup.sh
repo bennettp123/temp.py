@@ -7,5 +7,3 @@ DB="./data/temperatures.db"
 if [ ! -e "$DB" ]; then
   sqlite3 "$DB" 'BEGIN; CREATE TABLE temperature (timestamp DATETIME, temperature NUMERIC); COMMIT;'
 fi
-
-curl https://www.google.com/jsapi > ./www/google-jsapi.js
