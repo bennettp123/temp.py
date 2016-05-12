@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import glob
+import stat
 import time
 import shutil
 import tempfile
@@ -60,6 +61,7 @@ if __name__ == "__main__":
         prev_temp = temp
         (fd, temp_path) = tempfile.mkstemp()
         os.write(fd,json.dumps(temp,ensure_ascii=False))
+        os.fchmod(fd,stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IROTH) #644
         os.close(fd)
         shutil.move(temp_path,outfile)
         time.sleep(2)
