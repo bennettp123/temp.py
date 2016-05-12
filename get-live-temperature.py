@@ -52,11 +52,15 @@ if __name__ == "__main__":
 
     outfile = '/home/bennett/src/temp.py/www/latest.json'
 
+    prev_temp = None
     while True:
-        temp = read_temp()
+        temp = round(read_temp(), 1)
+        if temp == prev_temp:
+            continue
+        prev_temp = temp
         (fd, temp_path) = tempfile.mkstemp()
         os.write(fd,json.dumps(temp,ensure_ascii=False))
         os.close(fd)
         shutil.move(temp_path,outfile)
-        time.sleep(1)
+        time.sleep(2)
 
