@@ -13,6 +13,35 @@ base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
 
+from threading import Timer
+
+class RepeatedTimer(object):
+    def __init__(self, interval, function, *args, **kwargs):
+        self._timer     = None
+        self.interval   = interval
+        self.function   = function
+        self.args       = args
+        self.kwargs     = kwargs
+        self.is_running = False
+        self.start()
+
+    def _run(self):
+        self.is_running = False
+        self.start()
+        self.function(*self.args, **self.kwargs)
+
+    def start(self):
+        if not self.is_running:
+            self._timer = Timer(self.interval, self._run)
+            self._timer.daemon = True
+            self._timer.start()
+            self.is_running = True
+
+    def stop(self):
+        self._timer.cancel()
+        self.is_running = False
+
+
 def read_temp_raw():
     f = open(device_file, 'r')
     lines = f.readlines()
@@ -40,6 +69,33 @@ def log_temp(temp):
     conn.commit()
     conn.close()
 
+def log_null_temp(datetime):
+    dbname='/home/bennett/src/temp.py/data/temperatures.db'
+    conn=sqlite3.connect(dbname)
+    curs=conn.cursor()
+    curs.execute("INSERT INTO temperature VALUES ((?),NULL)", (datetime,))
+    conn.commit()
+    conn.close()
+
+def insert_missing_nulls():
+    dbname='/home/bennett/src/temp.py/data/temperatures.db'
+    conn=sqlite3.connect(dbname)
+    curs=conn.cursor()
+    curs.execute("SELECT timestamp, temperature FROM temperature ORDER BY timestamp DESC");
+    rows=curs.fetchall()
+    prev_row = None
+    for row in rows:
+        if prev_row is not None:
+            if prev_row[0] - row[0] > 60:
+                null_timestamps = range(row[0]+60, prev_row[0]-60, 60)
+                for timestamp in null_timestamps:
+                    log_null_temp(timestamp)
+        prev_row = row
+    
+
+def read_and_log_temp():
+    log_temp(read_temp())
+
 if __name__ == "__main__":
     pidfile_str = os.path.expanduser("~/.temperature-monitor.pid")
     if os.access(pidfile_str, os.F_OK):
@@ -56,7 +112,11 @@ if __name__ == "__main__":
     pidfile.write("%s" % os.getpid())
     pidfile.close()
 
-    while True:
-        log_temp(read_temp())
-        time.sleep(60)
+    rt = RepeatedTimer(60, read_and_log_temp)
+    time.sleep(60)
+    insert_missing_nulls()
 
+    # timer thread is a daemon thread, and exits when
+    # the main thread exits -- need to wait indefinitely
+    while True:
+        time.sleep(3600)
