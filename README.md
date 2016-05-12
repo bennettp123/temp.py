@@ -10,4 +10,5 @@ Sample nginx config:
         location /temperature {
                 root /home/bennett/src/temp.py/www;
                 allow all;
+		expires 60;
         }
