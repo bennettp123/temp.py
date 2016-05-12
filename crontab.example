@@ -3,3 +3,4 @@
   * *  *               *   *     /home/bennett/src/temp.py/temperature-monitor.py
   * *  *               *   *     /home/bennett/src/temp.py/webui.py > /home/bennett/src/temp.py/www/index.html
   0 0  *               *   *     /home/bennett/src/temp.py/purge-old.py
+  * *  *               *   *     /home/bennett/src/temp.py/get-webdata.py > /home/bennett/src/temp.py/www/data.json
