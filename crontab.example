@@ -2,4 +2,4 @@
 
   * *  *               *   *     /home/bennett/src/temp.py/temperature-monitor.py
   0 0  *               *   *     /home/bennett/src/temp.py/purge-old.py
-  * *  *               *   *     /home/bennett/src/temp.py/get-webdata.py > /home/bennett/src/temp.py/www/data.json
+  * *  *               *   *     /bin/bash -c "/home/bennett/src/temp.py/get-webdata.py > /home/bennett/src/temp.py/www/data-new.json && mv /home/bennett/src/temp.py/www/data-new.json /home/bennett/src/temp.py/www/data.json"
