@@ -49,12 +49,14 @@ Raspberry Pi Temperature Logger
         min = jsondata.min;
         max = jsondata.max;
         avg = jsondata.avg;
+        current = jsondata.current;
 
         document.getElementById("min_timestamp").textContent = min[0][0];
         document.getElementById("min_temp").textContent = min[0][1];
         document.getElementById("max_timestamp").textContent = max[0][0];
         document.getElementById("max_temp").textContent = max[0][1];
         document.getElementById("avg_temp").textContent = avg[0][1];
+        document.getElementById("current_temp").textContent = current[0][1];
         
         var oldTable = document.getElementById("statstable" + statsTableId);
         var newTable = buildHtmlTable(jsondata.rows);
@@ -127,11 +129,13 @@ Raspberry Pi Temperature Logger
 <h2>Temperature Chart</h2>
 <div id="chart_div" style="width: 900px; height: 500px;"></div>
 <hr>
-<h2>Minumum temperature&nbsp</h2>
+<h2>Current</h2>
+<span id="current_temp">&nbsp;</span>
+<h2>Minumum</h2>
 <span id="min_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="min_temp">&nbsp;</span>
-<h2>Maximum temperature</h2>
+<h2>Maximum</h2>
 <span id="max_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="max_temp">&nbsp;</span>
-<h2>Average temperature</h2>
+<h2>Average</h2>
 <span id="avg_temp">&nbsp;</span>
 <hr>
 <h2>Raw data</h2>
