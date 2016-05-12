@@ -13,7 +13,7 @@ Sample nginx config:
                 expires 60;
         }
         
-        location /temperature/lates.json {
+        location /temperature/latest.json {
                 root /home/bennett/src/temp.py/www;
                 allow all;
                 expires 2;
