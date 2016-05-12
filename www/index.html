@@ -8,6 +8,7 @@ Raspberry Pi Temperature Logger
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
+      //google.load("visualization", "1", {packages:["line"]});
       google.setOnLoadCallback(updateInfo);
 
       // http://stackoverflow.com/a/35970894/2454476
@@ -105,9 +106,17 @@ Raspberry Pi Temperature Logger
         arraydata.unshift(['Timestamp', 'Temperature']);        
         var data = google.visualization.arrayToDataTable(arraydata);
         var options = {
-          title: 'Temperature'
+          title: 'Temperature',
+          chartArea: {width: '100%', height: '100%'},
+          titlePosition: 'in',
+          axisTitlesPosition: 'in',
+          vAxis: {baseline: 0, textPosition: 'in'},
+          hAxis: {format: 'none'},
+          legend: {potition: 'none'},
+          interpolateNulls: true
         };
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        //var chart = new google.charts.Line(document.getElementById('chart_div'));
         chart.draw(data, options);
       }
     </script>
