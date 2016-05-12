@@ -5,5 +5,6 @@ mkdir -p ./www
 
 DB="./data/temperatures.db"
 if [ ! -e "$DB" ]; then
-  sqlite3 "$DB" 'BEGIN; CREATE TABLE temperature (timestamp DATETIME, temperature NUMERIC); COMMIT;'
+  sqlite3 "$DB" 'BEGIN; CREATE TABLE temperature (timestamp INTEGER, temperature NUMERIC); COMMIT;'
+  sqlite3 "$DB" 'BEGIN; CREATE INDEX idx_temperature_timestamp ON temperature(timestamp); COMMIT;'
 fi
