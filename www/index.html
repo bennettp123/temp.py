@@ -40,7 +40,20 @@ Raspberry Pi Temperature Logger
         });
       }
 
-      var graphTimer = window.setInterval(updateInfo, 120000); // update every 120 seconds
+      function updateLiveInfo() {
+        getJSON("/temperature/latest.json",
+        function(err, data) {
+          if (err != null) {
+            //alert("Something went wrong: " + err);
+          } else {
+            document.getElementById("current_temp").textContent = data;
+            document.getElementById("current_temp_tag").removeAttribute('style');
+          }
+        });
+      }
+
+      var graphTimer = window.setInterval(updateInfo, 120000);   // update every 120 seconds
+      var liveTimer  = window.setInterval(updateLiveInfo, 2000); // update every two seconds
 
       var statsTableId = 0;
 
@@ -49,14 +62,14 @@ Raspberry Pi Temperature Logger
         min = jsondata.min;
         max = jsondata.max;
         avg = jsondata.avg;
-        current = jsondata.current;
+        //current = jsondata.current;
 
         document.getElementById("min_timestamp").textContent = min[0][0];
         document.getElementById("min_temp").textContent = min[0][1];
         document.getElementById("max_timestamp").textContent = max[0][0];
         document.getElementById("max_temp").textContent = max[0][1];
         document.getElementById("avg_temp").textContent = avg[0][1];
-        document.getElementById("current_temp").textContent = current[0][1];
+        //document.getElementById("current_temp").textContent = current[0][1];
         
         var oldTable = document.getElementById("statstable" + statsTableId);
         var newTable = buildHtmlTable(jsondata.rows);
@@ -130,7 +143,7 @@ Raspberry Pi Temperature Logger
 <div id="chart_div" style="width: 900px; height: 500px;"></div>
 <hr>
 <h2>Current</h2>
-<span id="current_temp">&nbsp;</span>
+<span id="current_temp">&nbsp;</span><span id="current_temp_tag" style="display:none">&nbsp;&deg;C</span>
 <h2>Minumum</h2>
 <span id="min_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="min_temp">&nbsp;</span>
 <h2>Maximum</h2>
