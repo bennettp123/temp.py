@@ -11,7 +11,7 @@ def purge():
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
 
-    curs.execute("DELETE FROM temperature WHERE temperature<datetime('now','-1 year');")
+    curs.execute("DELETE FROM temperature WHERE temperature<strftime('%s','now','-1 year');")
     conn.commit()
     conn.close()
 
