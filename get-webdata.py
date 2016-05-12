@@ -21,9 +21,9 @@ def get_rows(interval):
     curs=conn.cursor()
 
     if interval == None:
-        curs.execute("SELECT datetime(timestamp,'unixepoch'), temperature FROM temperature")
+        curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), temperature FROM temperature ORDER BY timestamp ASC")
     else:
-        curs.execute("SELECT datetime(timestamp,'unixepoch'), temperature FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours')" % interval)
+        curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), temperature FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours') ORDER BY timestamp ASC" % interval)
 
     rows=curs.fetchall()
 
@@ -39,9 +39,9 @@ def get_min(interval):
     curs=conn.cursor()
 
     if interval == None:
-        curs.execute("SELECT datetime(timestamp,'unixepoch'), min(temperature) FROM temperature")
+        curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), min(temperature) FROM temperature")
     else:
-        curs.execute("SELECT datetime(timestamp,'unixepoch'), min(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours') AND timestamp<=strftime('%%s','now')" % interval)
+        curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), min(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours') AND timestamp<=strftime('%%s','now')" % interval)
 
     rows=curs.fetchall()
     conn.close()
@@ -56,9 +56,9 @@ def get_max(interval):
     curs=conn.cursor()
 
     if interval == None:
-        curs.execute("SELECT datetime(timestamp,'unixepoch'), max(temperature) FROM temperature")
+        curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), max(temperature) FROM temperature")
     else:
-        curs.execute("SELECT datetime(timestamp,'unixepoch'), max(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hour') AND timestamp<=strftime('%%s','now')" % interval)
+        curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), max(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hour') AND timestamp<=strftime('%%s','now')" % interval)
 
     rows=curs.fetchall()
     conn.close()
