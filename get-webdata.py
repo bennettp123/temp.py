@@ -82,14 +82,24 @@ def get_avg(interval):
     return rows
 
 
+def get_latest():
+
+    conn=sqlite3.connect(dbname)
+    curs=conn.cursor()
+    curs.execute("SELECT * FROM temperature ORDER BY timestamp DESC LIMIT 1;")
+    rows=curs.fetchall()
+    conn.close()
+    return rows
+    
 
 
-def print_webdata(rows, min, max, average):
+def print_webdata(rows, min, max, average, current):
     d = {}
     d['rows'] = rows
     d['min'] = min
     d['max'] = max
     d['avg'] = average
+    d['current'] = current
     print json.dumps(d, ensure_ascii=False)
 
 
@@ -123,7 +133,8 @@ def main():
     min = get_min(option)
     max = get_max(option)
     avg = get_avg(option)
-    print_webdata(records, min, max, avg)
+    current = get_latest()
+    print_webdata(records, min, max, avg, current)
 
     sys.stdout.flush()
 
