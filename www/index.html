@@ -65,12 +65,12 @@ Raspberry Pi Temperature Logger
         function buildHtmlTable(arr) {
           var table = document.createElement('table');
           var columns = addAllColumnHeaders(arr, table);
-          for (var i=1, maxi=arr.length; i < maxi; ++i) {
+          for (var i=arr.length-1; i > 1; i--) {
             var tr = document.createElement('tr');
             for (var j=0, maxj=columns.length; j < maxj ; ++j) {
               var td = document.createElement('td');
               cellValue = arr[i][columns[j]];
-              td.appendChild(document.createTextNode((arr[i][columns[j]] || '') + '\xa0\xa0\xa0\xa0')); // &nbsp;
+              td.appendChild(document.createTextNode((arr[i][columns[j]] || 'NULL') + '\xa0\xa0\xa0\xa0')); // &nbsp;
               tr.appendChild(td);
             }
             table.appendChild(tr);
@@ -113,7 +113,7 @@ Raspberry Pi Temperature Logger
           vAxis: {baseline: 0, textPosition: 'in'},
           hAxis: {format: 'none'},
           legend: {potition: 'none'},
-          interpolateNulls: true
+          //interpolateNulls: true
         };
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
         //var chart = new google.charts.Line(document.getElementById('chart_div'));
@@ -134,7 +134,7 @@ Raspberry Pi Temperature Logger
 <h2>Average temperature</h2>
 <span id="avg_temp">&nbsp;</span>
 <hr>
-<h2>In the last hour:</h2>
+<h2>Raw data</h2>
 <table id="statstable0">
 </table>
 <hr>
