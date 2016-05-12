@@ -30,29 +30,31 @@ def read_temp():
         temp_c = float(temp_string) / 1000.0
         temp_f = temp_c * 9.0 / 5.0 + 32.0
         return temp_c#, temp_f
-	
+        
 def log_temp(temp):
     dbname='/home/bennett/src/temp.py/data/temperatures.db'
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
 
-    curs.execute("INSERT INTO temperature VALUES (datetime('now'), (?))", (temp,))
+    curs.execute("INSERT INTO temperature VALUES (strftime('%s','now'), (?))", (temp,))
     conn.commit()
     conn.close()
 
 if __name__ == "__main__":
-    if os.access(os.path.expanduser("~/.temperature-monitor.pid"), os.F_OK):
-        pidfile = open(os.path.expanduser("~/.temperature-monitor.pid"), "r")
+    pidfile_str = os.path.expanduser("~/.temperature-monitor.pid")
+    if os.access(pidfile_str, os.F_OK):
+        pidfile = open(pidfile_str, "r")
         pidfile.seek(0)
         old_pd = pidfile.readline()
-       	if os.path.exists("/proc/%s" % old_pd):
+        pidfile.close()
+        if os.path.exists("/proc/%s" % old_pd):
             sys.exit(0)
-	else:
-            os.remove(os.path.expanduser("~/.temperature-monitor.pid"))
+        else:
+            os.remove(pidfile_str)
 
-    pidfile = open(os.path.expanduser("~/.temperature-monitor.pid"), "w")
+    pidfile = open(pidfile_str, "w+")
     pidfile.write("%s" % os.getpid())
-    pidfile.close
+    pidfile.close()
 
     while True:
         log_temp(read_temp())

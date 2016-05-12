@@ -20,9 +20,9 @@ def get_rows(interval):
     curs=conn.cursor()
 
     if interval == None:
-        curs.execute("SELECT timestamp,temperature FROM temperature")
+        curs.execute("SELECT datetime(timestamp,'unixepoch'), temperature FROM temperature")
     else:
-        curs.execute("SELECT timestamp,temperature FROM temperature WHERE timestamp>datetime('now','-%s hours')" % interval)
+        curs.execute("SELECT datetime(timestamp,'unixepoch'), temperature FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours')" % interval)
 
     rows=curs.fetchall()
 
@@ -38,9 +38,9 @@ def get_min(interval):
     curs=conn.cursor()
 
     if interval == None:
-        curs.execute("SELECT timestamp,min(temperature) FROM temperature")
+        curs.execute("SELECT datetime(timestamp,'unixepoch'), min(temperature) FROM temperature")
     else:
-        curs.execute("SELECT timestamp,min(temperature) FROM temperature WHERE timestamp>datetime('now','-%s hour') AND timestamp<=datetime('now')" % interval)
+        curs.execute("SELECT datetime(timestamp,'unixepoch'), min(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours') AND timestamp<=strftime('%%s','now')" % interval)
 
     rows=curs.fetchall()
     conn.close()
@@ -55,9 +55,9 @@ def get_max(interval):
     curs=conn.cursor()
 
     if interval == None:
-        curs.execute("SELECT timestamp,max(temperature) FROM temperature")
+        curs.execute("SELECT datetime(timestamp,'unixepoch'), max(temperature) FROM temperature")
     else:
-        curs.execute("SELECT timestamp,max(temperature) FROM temperature WHERE timestamp>datetime('now','-%s hour') AND timestamp<=datetime('now')" % interval)
+        curs.execute("SELECT datetime(timestamp,'unixepoch'), max(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hour') AND timestamp<=strftime('%%s','now')" % interval)
 
     rows=curs.fetchall()
     conn.close()
@@ -74,7 +74,7 @@ def get_avg(interval):
     if interval == None:
         curs.execute("SELECT timestamp,avg(temperature) FROM temperature")
     else:
-        curs.execute("SELECT timestamp,avg(temperature) FROM temperature WHERE timestamp>datetime('now','-%s hour') AND timestamp<=datetime('now')" % interval)
+        curs.execute("SELECT timestamp,avg(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours') AND timestamp<=strftime('%%s','now')" % interval)
 
     rows=curs.fetchall()
     conn.close()
@@ -127,4 +127,21 @@ def main():
     sys.stdout.flush()
 
 if __name__=="__main__":
+    pidfile_str = os.path.expanduser("~/.temperature-monitor-getwebdata.pid")
+    if os.access(pidfile_str, os.F_OK):
+        pidfile = open(pidfile_str, "r")
+        pidfile.seek(0)
+        old_pd = pidfile.readline()
+        pidfile.close()
+        if os.path.exists("/proc/%s" % old_pd):
+            sys.exit(0)
+        else:
+            os.remove(pidfile_str)
+
+    pidfile = open(pidfile_str, "w+")
+    pidfile.write("%s" % os.getpid())
+    pidfile.close()
+
     main()
+
+    os.remove(pidfile_str)
