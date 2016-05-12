@@ -51,7 +51,7 @@ if __name__ == "__main__":
     pidfile.write("%s" % os.getpid())
     pidfile.close()
 
-    outfile = '/home/bennett/src/temp.py/www/latest.json'
+    outfile = '/tmp/latest.json'
 
     prev_temp = None
     while True:
