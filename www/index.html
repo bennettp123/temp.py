@@ -157,7 +157,7 @@ var draw=function(arraydata){
 var updateInfo=function(){
  var e = document.getElementById("chart_placeholder");
  e.style.display='block';
- getJSON("/temperature/data.json",function(err,data){
+ getJSON("data.json",function(err,data){
   if(data!=null){
    draw(data.rows);
    e.style.display='none';
@@ -167,7 +167,7 @@ var updateInfo=function(){
 }
 
 var updateLiveInfo=function(){
- getJSON("/temperature/latest.json",function(err,data){
+ getJSON("latest.json",function(err,data){
   if(data!=null){
    document.getElementById("current_temp").textContent=data;
    document.getElementById("current_temp_tag").removeAttribute('style');
