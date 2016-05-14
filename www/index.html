@@ -7,9 +7,8 @@ Raspberry Pi Temperature Logger
 
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
+      'use strict';
       google.load("visualization", "1", {packages:["corechart"]});
-      //google.load("visualization", "1", {packages:["line"]});
-      google.setOnLoadCallback(updateInfo);
 
       // http://stackoverflow.com/a/35970894/2454476
       var getJSON = function(url, callback) {
@@ -27,97 +26,64 @@ Raspberry Pi Temperature Logger
         xhr.send();
       };
 
-      function updateInfo() {
-        getJSON("/temperature/data.json",
-        function(err, data) {
-          if (err != null) {
-            //alert("Something went wrong: " + err);
-          } else {
-            //alert("Your query count: " + data.query.count);
-            drawChart(data.rows);
-            updateStats(data);
-          }
-        });
-      }
-
-      function updateLiveInfo() {
-        getJSON("/temperature/latest.json",
-        function(err, data) {
-          if (err != null) {
-            //alert("Something went wrong: " + err);
-          } else {
-            document.getElementById("current_temp").textContent = data;
-            document.getElementById("current_temp_tag").removeAttribute('style');
-          }
-        });
-      }
-
-      var graphTimer = window.setInterval(updateInfo, 120000);   // update every 120 seconds
-      var liveTimer  = window.setInterval(updateLiveInfo, 2000); // update every two seconds
-
       var statsTableId = 0;
 
-      function updateStats(jsondata) {
+      // Adds a header row to the table and returns the set of columns.
+      // Need to do union of keys from all records as some records may not contain
+      // all records
+      var addAllColumnHeaders = function(arr, table)
+      {
+        var columnSet = [],
+        tr = document.createElement('tr');
+        for (var i=0, l=arr.length; i < l; i++) {
+          for (var key in arr[i]) {
+            if (arr[i].hasOwnProperty(key) && columnSet.indexOf(key)===-1) {
+              columnSet.push(key);
+              var th = document.createElement('th');
+              //th.appendChild(document.createTextNode(key));
+              th.appendChild(document.createTextNode((arr[i][key] || key) + '\xa0\xa0\xa0\xa0')); // &nbsp;
+              tr.appendChild(th);
+            }
+          }
+        }
+        table.appendChild(tr);
+        return columnSet;
+      }
 
-        min = jsondata.min;
-        max = jsondata.max;
-        avg = jsondata.avg;
-        //current = jsondata.current;
+      // Builds the HTML Table out of myList json data from Ivy restful service.
+      var buildHtmlTable = function(arr) {
+        var table = document.createElement('table');
+        var columns = addAllColumnHeaders(arr, table);
+        for (var i=arr.length-1; i > 1; i--) {
+          var tr = document.createElement('tr');
+          for (var j=0, maxj=columns.length; j < maxj ; ++j) {
+            var td = document.createElement('td');
+            var cellValue = arr[i][columns[j]];
+            td.appendChild(document.createTextNode((arr[i][columns[j]] || 'NULL') + '\xa0\xa0\xa0\xa0')); // &nbsp;
+            tr.appendChild(td);
+          }
+          table.appendChild(tr);
+        }
+        return table;
+      }
 
-        document.getElementById("min_timestamp").textContent = min[0][0];
-        document.getElementById("min_temp").textContent = min[0][1];
-        document.getElementById("max_timestamp").textContent = max[0][0];
-        document.getElementById("max_temp").textContent = max[0][1];
-        document.getElementById("avg_temp").textContent = avg[0][1];
-        //document.getElementById("current_temp").textContent = current[0][1];
+      var updateStats = function(jsondata) {
+
+        document.getElementById("min_timestamp").textContent = jsondata.min[0][0];
+        document.getElementById("min_temp").textContent = jsondata.min[0][1];
+        document.getElementById("max_timestamp").textContent = jsondata.max[0][0];
+        document.getElementById("max_temp").textContent = jsondata.max[0][1];
+        document.getElementById("avg_temp").textContent = jsondata.avg[0][1];
         
         var oldTable = document.getElementById("statstable" + statsTableId);
         var newTable = buildHtmlTable(jsondata.rows);
         newTable.id = "statstable" + ++statsTableId;
         oldTable.parentNode.replaceChild(newTable, oldTable);
-
-        // Builds the HTML Table out of myList json data from Ivy restful service.
-        function buildHtmlTable(arr) {
-          var table = document.createElement('table');
-          var columns = addAllColumnHeaders(arr, table);
-          for (var i=arr.length-1; i > 1; i--) {
-            var tr = document.createElement('tr');
-            for (var j=0, maxj=columns.length; j < maxj ; ++j) {
-              var td = document.createElement('td');
-              cellValue = arr[i][columns[j]];
-              td.appendChild(document.createTextNode((arr[i][columns[j]] || 'NULL') + '\xa0\xa0\xa0\xa0')); // &nbsp;
-              tr.appendChild(td);
-            }
-            table.appendChild(tr);
-          }
-          return table;
-        }
-
-        // Adds a header row to the table and returns the set of columns.
-        // Need to do union of keys from all records as some records may not contain
-        // all records
-        function addAllColumnHeaders(arr, table)
-        {
-          var columnSet = [],
-          tr = document.createElement('tr');
-          for (var i=0, l=arr.length; i < l; i++) {
-            for (var key in arr[i]) {
-              if (arr[i].hasOwnProperty(key) && columnSet.indexOf(key)===-1) {
-                columnSet.push(key);
-                var th = document.createElement('th');
-                //th.appendChild(document.createTextNode(key));
-		th.appendChild(document.createTextNode((arr[i][key] || key) + '\xa0\xa0\xa0\xa0')); // &nbsp;
-                tr.appendChild(th);
-              }
-            }
-          }
-          table.appendChild(tr);
-          return columnSet;
-        }
-
       }
 
-      function drawChart(arraydata) {
+      var chart = null;
+
+      var drawChart = function(arraydata) {
         arraydata.unshift(['Timestamp', 'Temperature']);        
         var data = google.visualization.arrayToDataTable(arraydata);
         var options = {
@@ -130,10 +96,49 @@ Raspberry Pi Temperature Logger
           legend: {potition: 'none'},
           //interpolateNulls: true
         };
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        //var chart = new google.charts.Line(document.getElementById('chart_div'));
+        if (chart == null) {
+          chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        }
         chart.draw(data, options);
       }
+
+      var updateInfo = function() {
+        getJSON("/temperature/data.json",
+        function(err, data) {
+          if (err != null) {
+            //alert("Something went wrong: " + err);
+          } else if (data != null) {
+            drawChart(data.rows);
+            updateStats(data);
+          }
+        });
+      }
+
+      var updateLiveInfo = function() {
+        getJSON("/temperature/latest.json",
+        function(err, data) {
+          if (err != null) {
+            //alert("Something went wrong: " + err);
+          } else if (data != null) {
+            var e = document.getElementById("current_temp")
+            if (e != null) {
+              e.textContent = data;
+              var f = document.getElementById("current_temp_tag")
+              if (f != null) {
+                f.removeAttribute('style');
+              }
+            }
+          }
+        });
+      }
+
+      google.setOnLoadCallback(function(){
+        updateLiveInfo();
+        updateInfo();
+        window.setInterval(updateInfo, 6000); // update every 60 seconds
+        window.setInterval(updateLiveInfo, 1000); // update every second
+      });
+
     </script>
 </head>
 <body>
