@@ -1,160 +1,128 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>
-Raspberry Pi Temperature Logger
-    </title>
+<title>Temperature Logger</title>
+<script type="text/javascript" src="https://www.google.com/jsapi"/>
+<script type="text/javascript">
+'use strict';
 
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-      'use strict';
-      google.load("visualization", "1", {packages:["corechart"]});
+// http://stackoverflow.com/a/35970894/2454476
+var getJSON=function(url,callback){
+ var xhr=new XMLHttpRequest();
+ xhr.open("get",url,true);
+ xhr.responseType="json";
+ xhr.onload=function(){
+ var status=xhr.status;
+  if(status==200){
+   callback(null,xhr.response);
+  }else{
+   callback(status);
+  }
+ };
+ xhr.send();
+};
 
-      // http://stackoverflow.com/a/35970894/2454476
-      var getJSON = function(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("get", url, true);
-        xhr.responseType = "json";
-        xhr.onload = function() {
-          var status = xhr.status;
-          if (status == 200) {
-            callback(null, xhr.response);
-          } else {
-            callback(status);
-          }
-        };
-        xhr.send();
-      };
+// Adds a header row to the table and returns the set of columns.
+// Need to do union of keys from all records as some records may not contain
+// all records
+var addColHeaders=function(arr,table){
+ var columnSet=[],tr=document.createElement('tr');
+ for(var i=0,l=arr.length;i<l;i++){
+  for(var key in arr[i]){
+   if(arr[i].hasOwnProperty(key)&&columnSet.indexOf(key)===-1){
+    columnSet.push(key);
+    var th=document.createElement('th');
+    th.appendChild(document.createTextNode((arr[i][key]||key)+'\xa0\xa0\xa0\xa0'));//&nbsp;
+    tr.appendChild(th);
+   }
+  }
+ }
+ table.appendChild(tr);
+ return columnSet;
+}
 
-      var statsTableId = 0;
+// Builds the HTML Table out of myList json data from Ivy restful service.
+var buildTable=function(arr){
+ var table=document.createElement('table'),cols=addColHeaders(arr,table);
+ for(var i=arr.length-1;i>1;i--){
+  var tr=document.createElement('tr');
+  for(var j=0,maxj=cols.length;j<maxj;++j){
+   var td=document.createElement('td'),cellValue=arr[i][cols[j]];
+   td.appendChild(document.createTextNode((arr[i][cols[j]]||'NULL')+'\xa0\xa0\xa0\xa0'));//&nbsp;
+   tr.appendChild(td);
+  }
+  table.appendChild(tr);
+ }
+ return table;
+}
 
-      // Adds a header row to the table and returns the set of columns.
-      // Need to do union of keys from all records as some records may not contain
-      // all records
-      var addAllColumnHeaders = function(arr, table)
-      {
-        var columnSet = [],
-        tr = document.createElement('tr');
-        for (var i=0, l=arr.length; i < l; i++) {
-          for (var key in arr[i]) {
-            if (arr[i].hasOwnProperty(key) && columnSet.indexOf(key)===-1) {
-              columnSet.push(key);
-              var th = document.createElement('th');
-              //th.appendChild(document.createTextNode(key));
-              th.appendChild(document.createTextNode((arr[i][key] || key) + '\xa0\xa0\xa0\xa0')); // &nbsp;
-              tr.appendChild(th);
-            }
-          }
-        }
-        table.appendChild(tr);
-        return columnSet;
-      }
+var statsTableId=0;
+var update=function(jsondata){
+ document.getElementById("min_timestamp").textContent=jsondata.min[0][0];
+ document.getElementById("min_temp").textContent=jsondata.min[0][1];
+ document.getElementById("max_timestamp").textContent=jsondata.max[0][0];
+ document.getElementById("max_temp").textContent=jsondata.max[0][1];
+ document.getElementById("avg_temp").textContent=jsondata.avg[0][1];
+ var oldTable=document.getElementById("statstable"+statsTableId),newTable=buildTable(jsondata.rows);
+ newTable.id="statstable" + ++statsTableId;
+ oldTable.parentNode.replaceChild(newTable,oldTable);
+}
 
-      // Builds the HTML Table out of myList json data from Ivy restful service.
-      var buildHtmlTable = function(arr) {
-        var table = document.createElement('table');
-        var columns = addAllColumnHeaders(arr, table);
-        for (var i=arr.length-1; i > 1; i--) {
-          var tr = document.createElement('tr');
-          for (var j=0, maxj=columns.length; j < maxj ; ++j) {
-            var td = document.createElement('td');
-            var cellValue = arr[i][columns[j]];
-            td.appendChild(document.createTextNode((arr[i][columns[j]] || 'NULL') + '\xa0\xa0\xa0\xa0')); // &nbsp;
-            tr.appendChild(td);
-          }
-          table.appendChild(tr);
-        }
-        return table;
-      }
+var chart=null;
+var draw=function(arraydata){
+ arraydata.unshift(['Timestamp','Temperature']);    
+ var data=google.visualization.arrayToDataTable(arraydata),options={
+  title:'Temperature',
+  chartArea:{width:'100%',height:'100%'},
+  titlePosition:'in',
+  axisTitlesPosition:'in',
+  vAxis:{baseline:0,textPosition:'in'},
+  hAxis:{format:'none'},
+  legend:{potition:'none'},
+  //interpolateNulls: true
+ };
+ if(chart==null){chart=new google.visualization.LineChart(document.getElementById('chart_div'));}
+ chart.draw(data,options);
+}
 
-      var updateStats = function(jsondata) {
+var updateInfo=function(){
+ getJSON("/temperature/data.json",function(err,data){
+  if(data!=null){
+   draw(data.rows);
+   update(data);
+  }
+ });
+}
 
-        document.getElementById("min_timestamp").textContent = jsondata.min[0][0];
-        document.getElementById("min_temp").textContent = jsondata.min[0][1];
-        document.getElementById("max_timestamp").textContent = jsondata.max[0][0];
-        document.getElementById("max_temp").textContent = jsondata.max[0][1];
-        document.getElementById("avg_temp").textContent = jsondata.avg[0][1];
-        
-        var oldTable = document.getElementById("statstable" + statsTableId);
-        var newTable = buildHtmlTable(jsondata.rows);
-        newTable.id = "statstable" + ++statsTableId;
-        oldTable.parentNode.replaceChild(newTable, oldTable);
-      }
+var updateLiveInfo=function(){
+ getJSON("/temperature/latest.json",function(err,data){
+  if(data!=null){
+   document.getElementById("current_temp").textContent=data;
+   document.getElementById("current_temp_tag").removeAttribute('style');
+  }
+ });
+}
 
-      var chart = null;
-
-      var drawChart = function(arraydata) {
-        arraydata.unshift(['Timestamp', 'Temperature']);        
-        var data = google.visualization.arrayToDataTable(arraydata);
-        var options = {
-          title: 'Temperature',
-          chartArea: {width: '100%', height: '100%'},
-          titlePosition: 'in',
-          axisTitlesPosition: 'in',
-          vAxis: {baseline: 0, textPosition: 'in'},
-          hAxis: {format: 'none'},
-          legend: {potition: 'none'},
-          //interpolateNulls: true
-        };
-        if (chart == null) {
-          chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        }
-        chart.draw(data, options);
-      }
-
-      var updateInfo = function() {
-        getJSON("/temperature/data.json",
-        function(err, data) {
-          if (err != null) {
-            //alert("Something went wrong: " + err);
-          } else if (data != null) {
-            drawChart(data.rows);
-            updateStats(data);
-          }
-        });
-      }
-
-      var updateLiveInfo = function() {
-        getJSON("/temperature/latest.json",
-        function(err, data) {
-          if (err != null) {
-            //alert("Something went wrong: " + err);
-          } else if (data != null) {
-            var e = document.getElementById("current_temp")
-            if (e != null) {
-              e.textContent = data;
-              var f = document.getElementById("current_temp_tag")
-              if (f != null) {
-                f.removeAttribute('style');
-              }
-            }
-          }
-        });
-      }
-
-      google.setOnLoadCallback(function(){
-        updateLiveInfo();
-        updateInfo();
-        window.setInterval(updateInfo, 60000); // update every 60 seconds
-        window.setInterval(updateLiveInfo, 1000); // update every second
-      });
-
-    </script>
+google.load("visualization","1",{packages:["corechart"]});
+google.setOnLoadCallback(function(){
+ updateLiveInfo();
+ updateInfo();
+ window.setInterval(updateInfo,60000); // 60 seconds
+ window.setInterval(updateLiveInfo,1000); // 1 second
+});
+</script>
 </head>
 <body>
-<h1>Raspberry Pi Temperature Logger</h1>
-<hr>
-<h2>Temperature Chart</h2>
-<div id="chart_div" style="width: 900px; height: 500px;"></div>
-<hr>
+<h1>Temperature Logger</h1>
+<div id="chart_div" style="width: 900px; height: 500px;"/>
 <h2>Current</h2>
-<span id="current_temp">&nbsp;</span><span id="current_temp_tag" style="display:none">&nbsp;&deg;C</span>
+<span id="current_temp"/><span id="current_temp_tag" style="display:none">&nbsp;&deg;C</span>
 <h2>Minumum</h2>
-<span id="min_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="min_temp">&nbsp;</span>
+<span id="min_timestamp"/>&nbsp;&nbsp;&nbsp;<span id="min_temp">&nbsp;</span>
 <h2>Maximum</h2>
-<span id="max_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="max_temp">&nbsp;</span>
+<span id="max_timestamp"/>&nbsp;&nbsp;&nbsp;<span id="max_temp">&nbsp;</span>
 <h2>Average</h2>
-<span id="avg_temp">&nbsp;</span>
+<span id="avg_temp"/>
 <hr>
 <h2>Raw data</h2>
 <table id="statstable0">
