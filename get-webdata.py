@@ -11,11 +11,7 @@ import ConfigParser
 # get data from the database
 # if an interval is passed, 
 # return a list of records from the database
-def get_rows(dbname,interval):
-
-    conn=sqlite3.connect(dbname)
-    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
-    curs=conn.cursor()
+def get_rows(curs,interval):
 
     if interval == None:
         curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), temperature FROM temperature ORDER BY timestamp ASC")
@@ -23,18 +19,11 @@ def get_rows(dbname,interval):
         curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), temperature FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours') ORDER BY timestamp ASC" % interval)
 
     rows=curs.fetchall()
-
-    conn.close()
-
     return rows
 
 
 
-def get_min(dbname,interval):
-
-    conn=sqlite3.connect(dbname)
-    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
-    curs=conn.cursor()
+def get_min(curs,interval):
 
     if interval == None:
         curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), min(temperature) FROM temperature")
@@ -42,17 +31,12 @@ def get_min(dbname,interval):
         curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), min(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours') AND timestamp<=strftime('%%s','now')" % interval)
 
     rows=curs.fetchall()
-    conn.close()
     return rows
 
 
 
 
-def get_max(dbname,interval):
-
-    conn=sqlite3.connect(dbname)
-    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
-    curs=conn.cursor()
+def get_max(curs,interval):
 
     if interval == None:
         curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), max(temperature) FROM temperature")
@@ -60,17 +44,12 @@ def get_max(dbname,interval):
         curs.execute("SELECT datetime(timestamp,'unixepoch', 'localtime'), max(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hour') AND timestamp<=strftime('%%s','now')" % interval)
 
     rows=curs.fetchall()
-    conn.close()
     return rows
 
 
 
 
-def get_avg(dbname,interval):
-
-    conn=sqlite3.connect(dbname)
-    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
-    curs=conn.cursor()
+def get_avg(curs,interval):
 
     if interval == None:
         curs.execute("SELECT timestamp,avg(temperature) FROM temperature")
@@ -78,18 +57,13 @@ def get_avg(dbname,interval):
         curs.execute("SELECT timestamp,avg(temperature) FROM temperature WHERE timestamp>strftime('%%s','now','-%s hours') AND timestamp<=strftime('%%s','now')" % interval)
 
     rows=curs.fetchall()
-    conn.close()
     return rows
 
 
-def get_latest(dbname):
+def get_latest(curs):
 
-    conn=sqlite3.connect(dbname)
-    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
-    curs=conn.cursor()
     curs.execute("SELECT * FROM temperature ORDER BY timestamp DESC LIMIT 1;")
     rows=curs.fetchall()
-    conn.close()
     return rows
     
 
@@ -153,13 +127,18 @@ def main(argv):
     interval = str(24*7*1)
 
     # print data from the database
-    records=get_rows(dbname,interval)
-    min_interval = get_min(dbname,interval)
-    min_alltime = get_min(dbname,None)
-    max_interval = get_max(dbname,interval)
-    max_alltime = get_max(dbname,None)
-    avg = get_avg(dbname,interval)
-    current = get_latest(dbname)
+    conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA query_only = true;")
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
+    curs=conn.cursor()
+    records=get_rows(curs,interval)
+    min_interval = get_min(curs,interval)
+    min_alltime = get_min(curs,None)
+    max_interval = get_max(curs,interval)
+    max_alltime = get_max(curs,None)
+    avg = get_avg(curs,interval)
+    current = get_latest(curs)
+    conn.close()
     print_webdata(records, min_interval, min_alltime, max_interval, max_alltime, avg, current)
 
     sys.stdout.flush()
