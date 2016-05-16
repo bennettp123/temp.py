@@ -4,13 +4,12 @@ import sqlite3
 import os
 import sys
 import json
+import getopt
+import ConfigParser
 
 
 # global variables
-speriod=(15*60)-1
-dbname='/home/bennett/src/temp.py/data/temperatures.db'
-
-
+dbname='/home/temperaturemon/src/temp.py/data/temperatures.db'
 
 # get data from the database
 # if an interval is passed, 
@@ -124,7 +123,28 @@ def validate_input(option_str):
 
 # main function
 # This is where the program starts 
-def main():
+def main(argv):
+
+    try:
+        opts, args = getopt.getopt(argv, 'hf:', ["help","conf="])
+    except getopt.GetoptError:
+        print 'temp.py -f <configfile>'
+        sys.exit(2)
+
+    conf_file = None
+
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print 'temp.py -f <configfile>'
+            sys.exit()
+        elif opt in ("-f", "--conf"):
+            conf_file = arg
+
+    config = ConfigParser.RawConfigParser()
+    if conf_file:
+        config.read(conf_file)
+
+    dbname = config.get('sqlite3', 'db_file')
 
     option = str(24*7)
 
@@ -154,6 +174,6 @@ if __name__=="__main__":
     pidfile.write("%s" % os.getpid())
     pidfile.close()
 
-    main()
+    main(sys.argv[1:])
 
     os.remove(pidfile_str)
