@@ -5,15 +5,40 @@ import sys
 import glob
 import time
 import sqlite3
+import getopt
+import ConfigParser
  
-def purge():
-    dbname='data/temperatures.db'
+def purge(dbname):
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
 
     curs.execute("DELETE FROM temperature WHERE temperature<strftime('%s','now','-1 year');")
     conn.commit()
     conn.close()
+
+def main(argv):
+    try:
+        opts, args = getopt.getopt(argv, 'hf:', ["help","conf="])
+    except getopt.GetoptError:
+        print 'purge-old.py -f <configfile>'
+        sys.exit(2)
+
+    conf_file = None
+
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print 'purge-old.py -f <configfile>'
+            sys.exit()
+        elif opt in ("-f", "--conf"):
+            conf_file = arg
+
+    config = ConfigParser.RawConfigParser()
+    if conf_file:
+        config.read(conf_file)
+
+    dbname = config.get('sqlite3', 'db_file')
+
+    purge(dbname)
 
 if __name__ == "__main__":
     pidfile_str = os.path.expanduser("~/.temperature-monitor-purgeold.pid")
@@ -31,6 +56,6 @@ if __name__ == "__main__":
     pidfile.write("%s" % os.getpid())
     pidfile.close()
 
-    purge()
-    os.remove(pidfile_str)
+    main(sys.argv[1:])
 
+    os.remove(pidfile_str)

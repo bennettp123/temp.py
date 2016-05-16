@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import sys
 import os
+import sys
 import glob
 import time
+import getopt
 import sqlite3
+import ConfigParser
  
 #os.system('/sbin/modprobe w1-gpio')
 #os.system('/sbin/modprobe w1-therm')
@@ -60,8 +62,7 @@ def read_temp():
         temp_f = temp_c * 9.0 / 5.0 + 32.0
         return temp_c#, temp_f
         
-def log_temp(temp):
-    dbname='/home/bennett/src/temp.py/data/temperatures.db'
+def log_temp(dbname,temp):
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
 
@@ -69,16 +70,14 @@ def log_temp(temp):
     conn.commit()
     conn.close()
 
-def log_null_temp(datetime):
-    dbname='/home/bennett/src/temp.py/data/temperatures.db'
+def log_null_temp(dbname,datetime):
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
     curs.execute("INSERT INTO temperature VALUES ((?),NULL)", (datetime,))
     conn.commit()
     conn.close()
 
-def insert_missing_nulls():
-    dbname='/home/bennett/src/temp.py/data/temperatures.db'
+def insert_missing_nulls(dbname):
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
     curs.execute("SELECT timestamp, temperature FROM temperature ORDER BY timestamp DESC");
@@ -89,12 +88,45 @@ def insert_missing_nulls():
             if prev_row[0] - row[0] > 60:
                 null_timestamps = range(row[0]+60, prev_row[0]-60, 60)
                 for timestamp in null_timestamps:
-                    log_null_temp(timestamp)
+                    log_null_temp(dbname,timestamp)
         prev_row = row
     
 
-def read_and_log_temp():
-    log_temp(read_temp())
+def read_and_log_temp(dbname):
+    log_temp(dbname,read_temp())
+
+def main(argv):
+
+    try:
+        opts, args = getopt.getopt(argv, 'hf:', ["help","conf="])
+    except getopt.GetoptError:
+        print 'temperature-monitor.py -f <configfile>'
+        sys.exit(2)
+
+    conf_file = None
+
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print 'temperature-monitor.py -f <configfile>'
+            sys.exit()
+        elif opt in ("-f", "--conf"):
+            conf_file = arg
+
+    config = ConfigParser.RawConfigParser()
+    if conf_file:
+        config.read(conf_file)
+
+    dbname = config.get('sqlite3', 'db_file')
+
+    rt = RepeatedTimer(60, read_and_log_temp, dbname)
+    time.sleep(60)
+    insert_missing_nulls(dbname)
+
+    # timer thread is a daemon thread, and exits when
+    # the main thread exits -- need to wait indefinitely
+    while True:
+        time.sleep(3600)
+
 
 if __name__ == "__main__":
     pidfile_str = os.path.expanduser("~/.temperature-monitor.pid")
@@ -112,11 +144,6 @@ if __name__ == "__main__":
     pidfile.write("%s" % os.getpid())
     pidfile.close()
 
-    rt = RepeatedTimer(60, read_and_log_temp)
-    time.sleep(60)
-    insert_missing_nulls()
+    main(sys.argv[1:])
 
-    # timer thread is a daemon thread, and exits when
-    # the main thread exits -- need to wait indefinitely
-    while True:
-        time.sleep(3600)
+    os.remove(pidfile_str)

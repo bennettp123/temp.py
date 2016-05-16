@@ -1,0 +1,2 @@
+[sqlite3]
+db_file: /home/bennett/src/temp.py/data/temperatures.db
