@@ -147,7 +147,6 @@ def main(argv):
         config.read(conf_file)
 
     dbname = config.get('sqlite3', 'db_file')
-    print dbname
 
     interval = str(24*7)
 
