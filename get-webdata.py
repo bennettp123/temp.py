@@ -9,7 +9,7 @@ import ConfigParser
 
 
 # global variables
-dbname='/home/temperaturemon/src/temp.py/data/temperatures.db'
+dbname='/home/bennett/src/temp.py/data/temperatures.db'
 
 # get data from the database
 # if an interval is passed, 
@@ -128,14 +128,14 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:', ["help","conf="])
     except getopt.GetoptError:
-        print 'temp.py -f <configfile>'
+        print 'get-webdata.py -f <configfile>'
         sys.exit(2)
 
     conf_file = None
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print 'temp.py -f <configfile>'
+            print 'get-webdata.py -f <configfile>'
             sys.exit()
         elif opt in ("-f", "--conf"):
             conf_file = arg

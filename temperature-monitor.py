@@ -9,6 +9,7 @@ import sqlite3
 #os.system('/sbin/modprobe w1-gpio')
 #os.system('/sbin/modprobe w1-therm')
  
+dbname='/home/bennett/src/temp.py/data/temperatures.db'
 base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
@@ -61,7 +62,6 @@ def read_temp():
         return temp_c#, temp_f
         
 def log_temp(temp):
-    dbname='/home/bennett/src/temp.py/data/temperatures.db'
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
 
@@ -70,7 +70,6 @@ def log_temp(temp):
     conn.close()
 
 def log_null_temp(datetime):
-    dbname='/home/bennett/src/temp.py/data/temperatures.db'
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
     curs.execute("INSERT INTO temperature VALUES ((?),NULL)", (datetime,))
@@ -78,7 +77,6 @@ def log_null_temp(datetime):
     conn.close()
 
 def insert_missing_nulls():
-    dbname='/home/bennett/src/temp.py/data/temperatures.db'
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
     curs.execute("SELECT timestamp, temperature FROM temperature ORDER BY timestamp DESC");
@@ -96,6 +94,39 @@ def insert_missing_nulls():
 def read_and_log_temp():
     log_temp(read_temp())
 
+def main(argv):
+
+    try:
+        opts, args = getopt.getopt(argv, 'hf:', ["help","conf="])
+    except getopt.GetoptError:
+        print 'temperature-monitor.py -f <configfile>'
+        sys.exit(2)
+
+    conf_file = None
+
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print 'temperature-monitor.py -f <configfile>'
+            sys.exit()
+        elif opt in ("-f", "--conf"):
+            conf_file = arg
+
+    config = ConfigParser.RawConfigParser()
+    if conf_file:
+        config.read(conf_file)
+
+    dbname = config.get('sqlite3', 'db_file')
+
+    rt = RepeatedTimer(60, read_and_log_temp)
+    time.sleep(60)
+    insert_missing_nulls()
+
+    # timer thread is a daemon thread, and exits when
+    # the main thread exits -- need to wait indefinitely
+    while True:
+        time.sleep(3600)
+
+
 if __name__ == "__main__":
     pidfile_str = os.path.expanduser("~/.temperature-monitor.pid")
     if os.access(pidfile_str, os.F_OK):
@@ -112,11 +143,6 @@ if __name__ == "__main__":
     pidfile.write("%s" % os.getpid())
     pidfile.close()
 
-    rt = RepeatedTimer(60, read_and_log_temp)
-    time.sleep(60)
-    insert_missing_nulls()
+    main(sys.argv[1:])
 
-    # timer thread is a daemon thread, and exits when
-    # the main thread exits -- need to wait indefinitely
-    while True:
-        time.sleep(3600)
+    os.remove(pidfile_str)

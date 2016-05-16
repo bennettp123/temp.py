@@ -1,6 +1,6 @@
 # m h  dom             mon dow   command
 
-  * *  *               *   *     /home/bennett/src/temp.py/temperature-monitor.py
-  0 0  *               *   *     /home/bennett/src/temp.py/purge-old.py
-  * *  *               *   *     /bin/bash -c "/home/bennett/src/temp.py/get-webdata.py > /tmp/data-new.json && mv /tmp/data-new.json /tmp/data.json"
+  * *  *               *   *     /home/bennett/src/temp.py/temperature-monitor.py -f /home/bennett/src/temp.py/settings.cfg
+  0 0  *               *   *     /home/bennett/src/temp.py/purge-old.py -f /home/bennett/src/temp.py/settings.cfg
+  * *  *               *   *     bash -c "/home/bennett/src/temp.py/get-webdata.py -f /home/bennett/src/temp.py/settings.cfg > /tmp/data-new.json && mv /tmp/data-new.json /tmp/data.json"
   * *  *               *   *     /home/bennett/src/temp.py/get-live-temperature.py
