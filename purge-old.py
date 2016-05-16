@@ -8,9 +8,7 @@ import sqlite3
 import getopt
 import ConfigParser
  
-dbname='/home/bennett/src/temp.py/data/temperatures.db'
-
-def purge():
+def purge(dbname):
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
 
@@ -40,7 +38,7 @@ def main(argv):
 
     dbname = config.get('sqlite3', 'db_file')
 
-    purge()
+    purge(dbname)
 
 if __name__ == "__main__":
     pidfile_str = os.path.expanduser("~/.temperature-monitor-purgeold.pid")

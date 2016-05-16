@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-import sys
 import os
+import sys
 import glob
 import time
+import getopt
 import sqlite3
+import ConfigParser
  
 #os.system('/sbin/modprobe w1-gpio')
 #os.system('/sbin/modprobe w1-therm')
  
-dbname='/home/bennett/src/temp.py/data/temperatures.db'
 base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder + '/w1_slave'
@@ -61,7 +62,7 @@ def read_temp():
         temp_f = temp_c * 9.0 / 5.0 + 32.0
         return temp_c#, temp_f
         
-def log_temp(temp):
+def log_temp(dbname,temp):
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
 
@@ -69,14 +70,14 @@ def log_temp(temp):
     conn.commit()
     conn.close()
 
-def log_null_temp(datetime):
+def log_null_temp(dbname,datetime):
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
     curs.execute("INSERT INTO temperature VALUES ((?),NULL)", (datetime,))
     conn.commit()
     conn.close()
 
-def insert_missing_nulls():
+def insert_missing_nulls(dbname):
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
     curs.execute("SELECT timestamp, temperature FROM temperature ORDER BY timestamp DESC");
@@ -91,8 +92,8 @@ def insert_missing_nulls():
         prev_row = row
     
 
-def read_and_log_temp():
-    log_temp(read_temp())
+def read_and_log_temp(dbname):
+    log_temp(dbname,read_temp())
 
 def main(argv):
 
@@ -117,9 +118,9 @@ def main(argv):
 
     dbname = config.get('sqlite3', 'db_file')
 
-    rt = RepeatedTimer(60, read_and_log_temp)
+    rt = RepeatedTimer(60, read_and_log_temp, dbname)
     time.sleep(60)
-    insert_missing_nulls()
+    insert_missing_nulls(dbname)
 
     # timer thread is a daemon thread, and exits when
     # the main thread exits -- need to wait indefinitely

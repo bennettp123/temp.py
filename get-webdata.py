@@ -8,13 +8,10 @@ import getopt
 import ConfigParser
 
 
-# global variables
-dbname='/home/bennett/src/temp.py/data/temperatures.db'
-
 # get data from the database
 # if an interval is passed, 
 # return a list of records from the database
-def get_rows(interval):
+def get_rows(dbname,interval):
 
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
@@ -32,7 +29,7 @@ def get_rows(interval):
 
 
 
-def get_min(interval):
+def get_min(dbname,interval):
 
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
@@ -49,7 +46,7 @@ def get_min(interval):
 
 
 
-def get_max(interval):
+def get_max(dbname,interval):
 
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
@@ -66,7 +63,7 @@ def get_max(interval):
 
 
 
-def get_avg(interval):
+def get_avg(dbname,interval):
 
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
@@ -81,7 +78,7 @@ def get_avg(interval):
     return rows
 
 
-def get_latest():
+def get_latest(dbname):
 
     conn=sqlite3.connect(dbname)
     curs=conn.cursor()
@@ -145,15 +142,16 @@ def main(argv):
         config.read(conf_file)
 
     dbname = config.get('sqlite3', 'db_file')
+    print dbname
 
-    option = str(24*7)
+    interval = str(24*7)
 
     # print data from the database
-    records=get_rows(option)
-    min = get_min(option)
-    max = get_max(option)
-    avg = get_avg(option)
-    current = get_latest()
+    records=get_rows(dbname,interval)
+    min = get_min(dbname,interval)
+    max = get_max(dbname,interval)
+    avg = get_avg(dbname,interval)
+    current = get_latest(dbname)
     print_webdata(records, min, max, avg, current)
 
     sys.stdout.flush()
