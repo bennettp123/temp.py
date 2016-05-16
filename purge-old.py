@@ -10,6 +10,7 @@ import ConfigParser
  
 def purge(dbname):
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
 
     curs.execute("DELETE FROM temperature WHERE temperature<strftime('%s','now','-1 year');")
