@@ -88,7 +88,7 @@ def insert_missing_nulls(dbname):
             if prev_row[0] - row[0] > 60:
                 null_timestamps = range(row[0]+60, prev_row[0]-60, 60)
                 for timestamp in null_timestamps:
-                    log_null_temp(timestamp)
+                    log_null_temp(dbname,timestamp)
         prev_row = row
     
 
