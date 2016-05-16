@@ -13,7 +13,7 @@ def purge(dbname):
     conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
 
-    curs.execute("DELETE FROM temperature WHERE temperature<strftime('%s','now','-1 year');")
+    curs.execute("DELETE FROM temperature WHERE timestamp<strftime('%s','now','-1 year');")
     conn.commit()
     conn.close()
 
