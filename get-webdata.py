@@ -14,6 +14,7 @@ import ConfigParser
 def get_rows(dbname,interval):
 
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
 
     if interval == None:
@@ -32,6 +33,7 @@ def get_rows(dbname,interval):
 def get_min(dbname,interval):
 
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
 
     if interval == None:
@@ -49,6 +51,7 @@ def get_min(dbname,interval):
 def get_max(dbname,interval):
 
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
 
     if interval == None:
@@ -66,6 +69,7 @@ def get_max(dbname,interval):
 def get_avg(dbname,interval):
 
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
 
     if interval == None:
@@ -81,6 +85,7 @@ def get_avg(dbname,interval):
 def get_latest(dbname):
 
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
     curs.execute("SELECT * FROM temperature ORDER BY timestamp DESC LIMIT 1;")
     rows=curs.fetchall()

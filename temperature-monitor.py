@@ -64,6 +64,7 @@ def read_temp():
         
 def log_temp(dbname,temp):
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
 
     curs.execute("INSERT INTO temperature VALUES (strftime('%s','now'), (?))", (temp,))
@@ -72,6 +73,7 @@ def log_temp(dbname,temp):
 
 def log_null_temp(dbname,datetime):
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
     curs.execute("INSERT INTO temperature VALUES ((?),NULL)", (datetime,))
     conn.commit()
@@ -79,9 +81,11 @@ def log_null_temp(dbname,datetime):
 
 def insert_missing_nulls(dbname):
     conn=sqlite3.connect(dbname)
+    conn.execute("PRAGMA busy_timeout = 30000")   # 30 s
     curs=conn.cursor()
     curs.execute("SELECT timestamp, temperature FROM temperature ORDER BY timestamp DESC");
     rows=curs.fetchall()
+    conn.close()
     prev_row = None
     for row in rows:
         if prev_row is not None:
