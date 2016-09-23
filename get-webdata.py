@@ -94,11 +94,13 @@ def get_latest(dbname):
     
 
 
-def print_webdata(rows, min, max, average, current):
+def print_webdata(rows, min, recordmin, max, recordmax, average, current):
     d = {}
     d['rows'] = rows
     d['min'] = min
     d['max'] = max
+    d['recordmin'] = recordmin
+    d['recordmax'] = recordmax
     d['avg'] = average
     d['current'] = current
     print json.dumps(d, ensure_ascii=False)
@@ -148,15 +150,17 @@ def main(argv):
 
     dbname = config.get('sqlite3', 'db_file')
 
-    interval = str(24*7)
+    interval = str(24*7*1)
 
     # print data from the database
     records=get_rows(dbname,interval)
-    min = get_min(dbname,interval)
-    max = get_max(dbname,interval)
+    min_interval = get_min(dbname,interval)
+    min_alltime = get_min(dbname,None)
+    max_interval = get_max(dbname,interval)
+    max_alltime = get_max(dbname,None)
     avg = get_avg(dbname,interval)
     current = get_latest(dbname)
-    print_webdata(records, min, max, avg, current)
+    print_webdata(records, min_interval, min_alltime, max_interval, max_alltime, avg, current)
 
     sys.stdout.flush()
 

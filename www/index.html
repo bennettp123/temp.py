@@ -129,8 +129,12 @@ var statsTableId=0;
 var update=function(jsondata){
  document.getElementById("min_timestamp").textContent=jsondata.min[0][0];
  document.getElementById("min_temp").textContent=jsondata.min[0][1];
+ document.getElementById("recordmin_timestamp").textContent=jsondata.recordmin[0][0];
+ document.getElementById("recordmin_temp").textContent=jsondata.recordmin[0][1];
  document.getElementById("max_timestamp").textContent=jsondata.max[0][0];
  document.getElementById("max_temp").textContent=jsondata.max[0][1];
+ document.getElementById("recordmax_timestamp").textContent=jsondata.recordmax[0][0];
+ document.getElementById("recordmax_temp").textContent=jsondata.recordmax[0][1];
  document.getElementById("avg_temp").textContent=jsondata.avg[0][1];
  var oldTable=document.getElementById("statstable"+statsTableId),newTable=buildTable(jsondata.rows);
  newTable.id="statstable" + ++statsTableId;
@@ -195,6 +199,12 @@ google.setOnLoadCallback(function(){
 <span id="min_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="min_temp">&nbsp;</span>
 <h2>Maximum</h2>
 <span id="max_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="max_temp">&nbsp;</span>
+<div style="display:none">
+<h2>Minumum (all-time record)</h2>
+<span id="recordmin_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="recordmin_temp">&nbsp;</span>
+<h2>Maximum (all-time record)</h2>
+<span id="recordmax_timestamp">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span id="recordmax_temp">&nbsp;</span>
+</div>
 <h2>Average</h2>
 <span id="avg_temp">&nbsp;</span>
 <hr>
