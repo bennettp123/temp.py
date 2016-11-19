@@ -9,3 +9,4 @@ if [ ! -e "$DB" ]; then
   sqlite3 "$DB" 'BEGIN; CREATE INDEX idx_temperature_timestamp ON temperature(timestamp); COMMIT;'
   sqlite3 "$DB" 'BEGIN; PRAGMA journal_mode=WAL; COMMIT;'
 fi
+
