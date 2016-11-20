@@ -7,9 +7,7 @@ import time
 import getopt
 import sqlite3
 import ConfigParser
-import daemon
-import lockfile
-
+ 
 #os.system('/sbin/modprobe w1-gpio')
 #os.system('/sbin/modprobe w1-therm')
  
@@ -133,11 +131,23 @@ def main(argv):
     while True:
         time.sleep(3600)
 
-if __name__ == "__main__":
-    context = daemon.DaemonContext(
-        pidfile=lockfile.FileLock(os.path.expanduser("~/.temperature-monitor.pid")),
-        detach_process=False
-    )
-    with context:
-        main(sys.argv)
 
+if __name__ == "__main__":
+    pidfile_str = os.path.expanduser("~/.temperature-monitor.pid")
+    if os.access(pidfile_str, os.F_OK):
+        pidfile = open(pidfile_str, "r")
+        pidfile.seek(0)
+        old_pd = pidfile.readline()
+        pidfile.close()
+        if os.path.exists("/proc/%s" % old_pd):
+            sys.exit(0)
+        else:
+            os.remove(pidfile_str)
+
+    pidfile = open(pidfile_str, "w+")
+    pidfile.write("%s" % os.getpid())
+    pidfile.close()
+
+    main(sys.argv[1:])
+
+    os.remove(pidfile_str)
